@@ -2,6 +2,18 @@
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Day 01 · GEMM Profiling Lab</title>
 <style>
 :root{--bg:#0b1220;--panel:#121e31;--panel2:#192941;--text:#e8eff9;--muted:#9aacc4;--line:#2b3d57;--blue:#78baff;--green:#76d6ad}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--blue)}header{padding:36px max(22px,calc((100% - 900px)/2));background:#142d4b;border-bottom:1px solid var(--line)}main{max-width:900px;margin:auto;padding:26px 22px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}h1{font-size:clamp(28px,4vw,42px);line-height:1.2;margin:8px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:16px}p,li{color:var(--muted)}code,pre{background:#08111e;border-radius:7px}code{padding:2px 5px}pre{padding:14px;overflow:auto;color:#dceaff}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid var(--line)}th{color:var(--muted)}.tag{color:var(--green);font-size:12px;font-weight:bold;letter-spacing:.1em}.callout{background:#102b25;border:1px solid #397a61;padding:14px;border-radius:10px}.back{display:inline-block;margin-top:12px}
+</style><style>
+.submit-panel{border:2px solid #397a61!important;background:linear-gradient(145deg,#112b25,#121e31)!important}
+.submit-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.submit-kicker{font-size:11px;letter-spacing:.14em;color:#76d6ad;font-weight:800}
+.submit-badge{font-size:12px;border:1px solid #397a61;color:#76d6ad;border-radius:99px;padding:4px 10px}
+.submit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.submit-box{background:#0d1928;border:1px solid #2b3d57;border-radius:12px;padding:15px}
+.submit-box h3{margin-top:0}.submit-box li{margin:5px 0}
+.submit-button,.copy-submit{display:inline-block;border:0;border-radius:9px;padding:11px 15px;margin:8px 6px 4px 0;font-weight:700;cursor:pointer;text-decoration:none}
+.submit-button{background:#75d6ad;color:#082018!important}.copy-submit{background:#263c58;color:#e8eff9}
+.submit-note{font-size:12px;color:#9aacc4}.submit-bottom{margin-top:12px}
+@media(max-width:650px){.submit-grid{grid-template-columns:1fr}}
 </style></head><body>
 <header><div class="tag">DAY 01 · 2026-11-18 · 120 MINUTES</div><h1>定位并优化一个慢 GEMM</h1><p>真实工程任务：建立基线 → 采集时间线 → 分析单 Kernel → 对照优化 → 提交性能归因。</p><a class="back" href="index.html#roadmap">← 返回 43 天课表</a></header>
 <main>
@@ -20,7 +32,17 @@ nsys profile --trace=cuda -o gemm_tiled ./tiled_gemm 2048</pre><p>比较相同�
 <section class="card"><h2>任务 E · Pinned Memory 与异步重叠（15 分钟）</h2><p>比较普通 Host Memory 和 pinned Host Memory 版本。Pinned Memory 本身不保证 overlap。检查异步拷贝、Streams、依赖关系和 Copy Engine，并用 Nsight Systems 时间线证明是否真实重叠。</p></section>
 <section class="card"><h2>资源模型推导（10 分钟）</h2><p>简化假设：每 SM 65536 个 32-bit registers、2048 threads、64 warps、16 blocks；256 threads/block；64 registers/thread；不使用 Shared Memory。</p><ul><li>每 Block registers = 256 × 64 = 16384。</li><li>Register 限制允许 4 Blocks；线程/warp 限制各允许 8 Blocks。</li><li>简化模型取最小值 4 Blocks，活跃 Warp = 32，理论 Occupancy = 50%。</li></ul><p>将每线程寄存器改为 32，重新计算理论 Occupancy，并解释为什么实际性能不保证提升：分配粒度、spill、指令数、访存量和真实架构限制。</p></section>
 <section class="card"><h2>提交物与评分（100 分）</h2><table><tr><th>项目</th><th>分值</th></tr><tr><td>基线与正确性数据</td><td>15</td></tr><tr><td>Nsight Systems 时间线分析</td><td>20</td></tr><tr><td>Nsight Compute 证据链</td><td>25</td></tr><tr><td>naive/tiled 对照和归因</td><td>20</td></tr><tr><td>pinned memory / overlap 判断</td><td>10</td></tr><tr><td>资源推导与技术表达</td><td>10</td></tr></table><p>提交至少三个矩阵规模的原始数据、一份 NSYS 报告、一份 NCU 报告、对照表和一页性能归因。80 分通过；没有真实报告，Profiling 部分最高只能得一半分。</p><div class="callout"><b>报告模板：</b>症状 → 假设 → 采集方式 → 证据 → 根因 → 优化 → 前后数据 → 副作用/适用边界。</div></section>
-<section class="card" id="submit"><h2>📤 提交结果 · 在当前 ChatGPT 学习对话完成</h2><div class="callout"><b>不要在课程网站上传文件。</b><p>完成实验后，直接回到我们当前的 Agent Infra 学习对话，把 <code>report.md</code>、<code>benchmark.csv</code>、关键 NSYS/NCU 截图或导出摘要拖入聊天框，并说明“Day 01 完成，请批改”。</p><p>我会按本页 100 分标准检查：数据真实性 → Profiling 证据 → 瓶颈假设 → 根因 → 优化 → 前后对比 → 工程边界。</p><p><b>建议长期归档：</b>原始代码和实验结果仍保存在你的 Private GitHub；课程网站不收集你的实验数据。</p></div><h3>提交前检查</h3><ul><li>report.md：结论不是只抄指标，而是有证据链。</li><li>benchmark.csv：至少三个矩阵规模，注明 warmup / runs / timing 方法。</li><li>NSYS：能解释 Kernel、Memcpy、CPU gap、同步。</li><li>NCU：能解释 Occupancy、Memory、Warp Stall、Register。</li><li>优化：有前后数据，并说明副作用。</li></ul><h3>我批改后的结果</h3><p>批改结果会在当前学习会话中形成 Day 01 能力记录，并据此动态调整 Day 02。</p></section>
+<section class="card submit-panel" id="submit">
+<div class="submit-head"><div><div class="submit-kicker">LESSON SUBMISSION</div><h2>📤 提交 Day 01 实验结果</h2><p>在这里完成提交准备，然后回到 ChatGPT 学习对话上传文件进行批改。</p></div><span class="submit-badge">本节课专属</span></div>
+<div class="submit-grid">
+<div class="submit-box"><h3>① 准备提交材料</h3><ul><li>实验报告 / 结论</li><li>Benchmark 原始数据（CSV）</li><li>关键 Profiling、日志或截图</li><li>代码修改或复现命令（如适用）</li></ul></div>
+<div class="submit-box"><h3>② 在 ChatGPT 上传</h3><p>点击下面按钮打开 ChatGPT，然后回到本次 Agent Infra 学习对话，把上述文件拖入聊天框。</p><a class="submit-button" href="https://chatgpt.com/" target="_blank" rel="noopener">前往 ChatGPT 提交 ↗</a><button class="copy-submit" type="button" onclick="copyLessonPrompt()">复制本节批改指令</button><p class="submit-note">按钮打开 ChatGPT，不会自动上传文件或自动定位本对话；请在本次学习会话中提交。</p></div>
+</div>
+<div class="submit-box submit-bottom"><h3>③ 提交后如何验收</h3><p>发送消息：<code>Day 01 完成，请按本节验收标准批改。</code></p><p>我会检查实验真实性、数据质量、Profile 证据、根因推导、优化效果和工程表达，并给出分数及补做任务。</p></div>
+</section>
+<script>
+function copyLessonPrompt(){const t="Day 01 完成，请按本节课程验收标准批改。请检查我的实验数据、Profiling/日志证据、瓶颈假设、根因分析、优化前后对比和工程边界；给出分项评分、知识漏洞、需要补做的实验，以及是否可以进入下一天。";if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>alert("批改指令已复制，请回到本次 ChatGPT 学习对话并上传实验文件。")).catch(()=>prompt("复制下面的批改指令：",t));}else{prompt("复制下面的批改指令：",t);}}
+</script>
 <section class="card"><h2>官方与工具资料</h2><ul><li><a href="https://docs.nvidia.com/nsight-systems/UserGuide/">Nsight Systems User Guide</a></li><li><a href="https://docs.nvidia.com/nsight-compute/ProfilingGuide/">Nsight Compute Profiling Guide</a></li><li><a href="https://github.com/NVIDIA/nsight-training">NVIDIA Nsight Training</a></li><li><a href="https://github.com/gpu-mode/lectures">GPU MODE Lectures</a></li></ul></section>
 <a class="back" href="index.html#roadmap">← 返回课表</a>
 </main></body></html>
