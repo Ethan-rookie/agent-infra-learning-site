@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Day 01 · GEMM Profiling Lab</title>
+<style>
+:root{--bg:#0b1220;--panel:#121e31;--panel2:#192941;--text:#e8eff9;--muted:#9aacc4;--line:#2b3d57;--blue:#78baff;--green:#76d6ad}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--blue)}header{padding:36px max(22px,calc((100% - 900px)/2));background:#142d4b;border-bottom:1px solid var(--line)}main{max-width:900px;margin:auto;padding:26px 22px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}h1{font-size:clamp(28px,4vw,42px);line-height:1.2;margin:8px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:16px}p,li{color:var(--muted)}code,pre{background:#08111e;border-radius:7px}code{padding:2px 5px}pre{padding:14px;overflow:auto;color:#dceaff}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid var(--line)}th{color:var(--muted)}.tag{color:var(--green);font-size:12px;font-weight:bold;letter-spacing:.1em}.callout{background:#102b25;border:1px solid #397a61;padding:14px;border-radius:10px}.back{display:inline-block;margin-top:12px}
+</style></head><body>
+<header><div class="tag">DAY 01 · 2026-11-18 · 120 MINUTES</div><h1>定位并优化一个慢 GEMM</h1><p>真实工程任务：建立基线 → 采集时间线 → 分析单 Kernel → 对照优化 → 提交性能归因。</p><a class="back" href="index.html#roadmap">← 返回 43 天课表</a></header>
+<main>
+<section class="card"><h2>本日目标</h2><ul><li>使用 Nsight Systems 区分 Host、Memcpy、Kernel 和同步开销。</li><li>使用 Nsight Compute 读取 Launch、Occupancy、Memory、Warp Stall 证据。</li><li>比较 naive GEMM 与 tiled GEMM，解释 Shared Memory 数据复用与资源代价。</li><li>验证 pinned memory 是否真的带来 Copy/Compute overlap。</li></ul></section>
+<section class="card"><h2>实验环境</h2><p>使用公开实验仓库 <a href="https://github.com/csl-iisc/gpu-profiling-tutorial">csl-iisc/gpu-profiling-tutorial</a>。代码与原始 Profile 结果请保存在你的私有学习仓库，不要上传到公开课程站点。</p><pre>git clone https://github.com/csl-iisc/gpu-profiling-tutorial.git
+cd gpu-profiling-tutorial
+make</pre><p>先阅读仓库 README / Makefile，确认编译产物、依赖和参数。GPU 资源不足时降低矩阵规模。</p></section>
+<section class="card"><h2>任务 A · 建立正确性和性能基线（20 分钟）</h2><pre>./naive_gemm 1024
+./naive_gemm 2048</pre><p>记录 GPU 型号、驱动、CUDA、编译选项、矩阵维度、正确性、重复运行的中位数。预热和首次初始化单独记录，不要只跑一次。</p></section>
+<section class="card"><h2>任务 B · Nsight Systems 时间线（20 分钟）</h2><pre>nsys profile --trace=cuda -o gemm_naive ./naive_gemm 2048
+nsys stats gemm_naive.nsys-rep</pre><ol><li>H2D、Kernel、D2H 分别占多少时间？</li><li>CPU 提交是否有空洞？是否存在同步等待？</li><li>Kernel 占端到端时间多少？如果只有 15%，优先优化 Kernel 是否合理？</li></ol></section>
+<section class="card"><h2>任务 C · Nsight Compute 单 Kernel 分析（25 分钟）</h2><pre>ncu --set full -o gemm_naive_ncu ./naive_gemm 2048</pre><p>检查 Launch Statistics、Occupancy、Compute/Memory Throughput、Warp Stall、Memory Workload。提出一个主要瓶颈假设，至少列出两项支持证据和一项反证/待验证项。不要凭单一 Stall 百分比直接下结论。</p></section>
+<section class="card"><h2>任务 D · naive 与 tiled 对照（25 分钟）</h2><pre>./tiled_gemm 2048
+ncu --set full -o gemm_tiled_ncu ./tiled_gemm 2048
+nsys profile --trace=cuda -o gemm_tiled ./tiled_gemm 2048</pre><p>比较相同规模、精度和正确性要求下的耗时；分析 Shared Memory 复用、DRAM/L2 流量、寄存器、Occupancy、同步成本。若 tiled 更慢，也要解释原因，不得强行写成优化成功。</p></section>
+<section class="card"><h2>任务 E · Pinned Memory 与异步重叠（15 分钟）</h2><p>比较普通 Host Memory 和 pinned Host Memory 版本。Pinned Memory 本身不保证 overlap。检查异步拷贝、Streams、依赖关系和 Copy Engine，并用 Nsight Systems 时间线证明是否真实重叠。</p></section>
+<section class="card"><h2>资源模型推导（10 分钟）</h2><p>简化假设：每 SM 65536 个 32-bit registers、2048 threads、64 warps、16 blocks；256 threads/block；64 registers/thread；不使用 Shared Memory。</p><ul><li>每 Block registers = 256 × 64 = 16384。</li><li>Register 限制允许 4 Blocks；线程/warp 限制各允许 8 Blocks。</li><li>简化模型取最小值 4 Blocks，活跃 Warp = 32，理论 Occupancy = 50%。</li></ul><p>将每线程寄存器改为 32，重新计算理论 Occupancy，并解释为什么实际性能不保证提升：分配粒度、spill、指令数、访存量和真实架构限制。</p></section>
+<section class="card"><h2>提交物与评分（100 分）</h2><table><tr><th>项目</th><th>分值</th></tr><tr><td>基线与正确性数据</td><td>15</td></tr><tr><td>Nsight Systems 时间线分析</td><td>20</td></tr><tr><td>Nsight Compute 证据链</td><td>25</td></tr><tr><td>naive/tiled 对照和归因</td><td>20</td></tr><tr><td>pinned memory / overlap 判断</td><td>10</td></tr><tr><td>资源推导与技术表达</td><td>10</td></tr></table><p>提交至少三个矩阵规模的原始数据、一份 NSYS 报告、一份 NCU 报告、对照表和一页性能归因。80 分通过；没有真实报告，Profiling 部分最高只能得一半分。</p><div class="callout"><b>报告模板：</b>症状 → 假设 → 采集方式 → 证据 → 根因 → 优化 → 前后数据 → 副作用/适用边界。</div></section>
+<section class="card"><h2>官方与工具资料</h2><ul><li><a href="https://docs.nvidia.com/nsight-systems/UserGuide/">Nsight Systems User Guide</a></li><li><a href="https://docs.nvidia.com/nsight-compute/ProfilingGuide/">Nsight Compute Profiling Guide</a></li><li><a href="https://github.com/NVIDIA/nsight-training">NVIDIA Nsight Training</a></li><li><a href="https://github.com/gpu-mode/lectures">GPU MODE Lectures</a></li></ul></section>
+<a class="back" href="index.html#roadmap">← 返回课表</a>
+</main></body></html>

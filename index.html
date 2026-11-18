@@ -1,20 +1,64 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Agent Infra 43-day hands-on engineering program"><title>Agent Infra Lab · 43 天实战训练</title>
 <style>
-:root{--bg:#0b1220;--panel:#121e31;--panel2:#192941;--text:#e8eff9;--muted:#9aacc4;--line:#2b3d57;--blue:#78baff;--green:#76d6ad}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}header{padding:52px max(22px,calc((100% - 1100px)/2));background:radial-gradient(ellipse at 85% 15%,#24466c 0,transparent 38%),linear-gradient(120deg,#142d4b,#101a2b 70%);border-bottom:1px solid var(--line)}.eyebrow{color:var(--green);font-weight:700;letter-spacing:.12em;font-size:12px}h1{font-size:clamp(34px,5vw,56px);line-height:1.12;margin:12px 0}h2{font-size:24px;margin:0 0 15px}h3{font-size:17px;margin:0 0 7px}p{color:var(--muted);margin:8px 0}.sub{font-size:17px;max-width:760px}.wrap{max-width:1120px;margin:auto;padding:28px 22px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}.stat,.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:18px}.stat b{display:block;font-size:27px}.stat span{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.layout{display:grid;grid-template-columns:235px 1fr;gap:18px}.nav{position:sticky;top:16px;align-self:start}.nav a{display:block;padding:8px 10px;color:var(--muted);border-radius:8px}.nav a:hover{background:var(--panel2);color:var(--text)}section{margin-bottom:18px}.pill{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:2px 9px;color:var(--green);font-size:12px}.phase{padding:14px 15px;border-left:3px solid var(--blue);background:var(--panel2);border-radius:0 10px 10px 0;margin:10px 0}.phase small{display:block;color:var(--muted);margin-top:3px}table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:10px 8px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}.callout{border:1px solid #3d684f;background:#112b25;padding:15px;border-radius:12px}.tool{padding:13px 0;border-bottom:1px solid var(--line)}.tool:last-child{border:0}footer{border-top:1px solid var(--line);padding:26px;text-align:center;color:var(--muted);font-size:13px}@media(max-width:760px){.layout{grid-template-columns:1fr}.nav{position:static}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+:root{--bg:#0b1220;--panel:#121e31;--panel2:#192941;--text:#e8eff9;--muted:#9aacc4;--line:#2b3d57;--blue:#78baff;--green:#76d6ad}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}header{padding:52px max(22px,calc((100% - 1100px)/2));background:radial-gradient(ellipse at 85% 15%,#24466c 0,transparent 38%),linear-gradient(120deg,#142d4b,#101a2b 70%);border-bottom:1px solid var(--line)}.eyebrow{color:var(--green);font-weight:700;letter-spacing:.12em;font-size:12px}h1{font-size:clamp(34px,5vw,56px);line-height:1.12;margin:12px 0}h2{font-size:24px;margin:0 0 15px}h3{font-size:17px;margin:0 0 7px}p{color:var(--muted);margin:8px 0}.sub{font-size:17px;max-width:760px}.wrap{max-width:1120px;margin:auto;padding:28px 22px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}.stat,.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:18px}.stat b{display:block;font-size:27px}.stat span{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.layout{display:grid;grid-template-columns:235px 1fr;gap:18px}.nav{position:sticky;top:16px;align-self:start}.nav a{display:block;padding:8px 10px;color:var(--muted);border-radius:8px}.nav a:hover{background:var(--panel2);color:var(--text)}section{margin-bottom:18px}.pill{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:2px 9px;color:var(--green);font-size:12px}.phase{padding:14px 15px;border-left:3px solid var(--blue);background:var(--panel2);border-radius:0 10px 10px 0;margin:10px 0}.phase summary{cursor:pointer;list-style:none}.phase summary::-webkit-details-marker{display:none}.phase summary:after{content:"＋";float:right;color:var(--blue);font-size:20px}.phase[open] summary:after{content:"－"}.phase small{display:block;color:var(--muted);margin-top:3px}.daylist{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:14px}.dayitem,.daylink{display:block;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text)}.dayitem span,.daylink span{display:block;color:var(--muted);font-size:13px;margin-top:5px}.daylink{border-color:#397a61;background:#102b25}.daylink strong{display:block;color:var(--green);margin-top:7px}.dayitem b,.daylink b{font-size:14px}@media(max-width:760px){.daylist{grid-template-columns:1fr}}table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:10px 8px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}.callout{border:1px solid #3d684f;background:#112b25;padding:15px;border-radius:12px}.tool{padding:13px 0;border-bottom:1px solid var(--line)}.tool:last-child{border:0}footer{border-top:1px solid var(--line);padding:26px;text-align:center;color:var(--muted);font-size:13px}@media(max-width:760px){.layout{grid-template-columns:1fr}.nav{position:static}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
 </style></head><body>
 <header><div class="eyebrow">ENGINEERING PRACTICE · 2026.11.18 — 2026.12.30</div><h1>Agent Infra<br>43 天实战训练</h1><p class="sub">从 GPU Kernel、Profiling、RDMA/NCCL，到 SGLang、GPU 调度与 Agent Runtime。以真实代码、性能证据和故障复现为主线，不做概念背诵。</p><div class="stats"><div class="stat"><b>43 天</b><span>训练周期</span></div><div class="stat"><b>98 小时</b><span>工作日 2h / 周末 3h</span></div><div class="stat"><b>L3—L4</b><span>分析与优化能力</span></div><div class="stat"><b>7 类工具</b><span>Profiling / Benchmark / Trace</span></div></div></header>
 <div class="wrap layout"><nav class="nav card"><h3>课程导航</h3><a href="#method">训练方法</a><a href="#roadmap">43 天路线</a><a href="#profiling">Profiling 工具链</a><a href="#labs">实战题源</a><a href="#day1">Day 01 GEMM Lab</a><a href="#deliver">交付与验收</a></nav><main>
 <section id="method" class="card"><h2>训练方法：工程问题驱动</h2><div class="grid"><div><h3>01 · Reproduce</h3><p>先运行真实代码，建立正确性与性能基线。</p></div><div><h3>02 · Profile</h3><p>用时间线和硬件计数器定位瓶颈，不凭直觉下结论。</p></div><div><h3>03 · Optimize</h3><p>修改实现或配置，控制变量做前后对照。</p></div><div><h3>04 · Explain</h3><p>把指标映射回硬件机制、源码和系统边界。</p></div></div><div class="callout"><b>验收原则：</b>每项优化必须提交环境、命令、原始数据、Profile 证据、假设、对照结果、收益与代价。没有实际运行的项目明确标记“未验证”。</div></section>
-<section id="roadmap" class="card"><h2>43 天学习路线</h2>
-<div class="phase"><b>11.18—11.27 · CUDA / Kernel / Profiling</b><small>GEMM、Reduction、Transpose、Occupancy、Warp Stall、Coalescing、Roofline、Tiling、Fusion、Triton。</small></div>
-<div class="phase"><b>11.28—12.01 · RDMA</b><small>PCIe、NUMA、QP/CQ/WR、MR/lkey/rkey、GPUDirect RDMA、perftest、GPU memory path。</small></div>
-<div class="phase"><b>12.02—12.05 · NCCL</b><small>AllReduce、AllGather、ReduceScatter、Ring/Tree、nccl-tests、busbw、慢 Rank 和拓扑。</small></div>
-<div class="phase"><b>12.06—12.12 · SGLang / MoE</b><small>Scheduler/Worker、KV Cache、PD 分离、MTP、Router、Dispatch/Combine、DeepEP/DeepGEMM。</small></div>
-<div class="phase"><b>12.13—12.15 · GPU Scheduler</b><small>Kubernetes Device Plugin、Volcano、Gang、队列、拓扑感知、资源碎片和多租户。</small></div>
-<div class="phase"><b>12.16—12.19 · Agent Runtime</b><small>任务状态机、Durable Execution、Checkpoint、幂等、Sandbox、权限隔离、Tracing。</small></div>
-<div class="phase"><b>12.20—12.27 · Capstone</b><small>设计 Agent Inference Platform，完成容量模型、执行恢复、GPU 调度、可观测性和故障测试。</small></div>
-<div class="phase"><b>12.28—12.30 · 最终验收</b><small>Kernel/RDMA/NCCL 实操、SGLang 性能归因、Agent 系统设计和综合答辩。</small></div></section>
+<section id="roadmap" class="card"><h2>43 天学习路线</h2><p>点击任意阶段展开每日任务；点击 Day 01 进入完整实战课程。</p>
+<details class="phase" open><summary><b>11.18—11.27 · CUDA / Kernel / Profiling</b><small>GEMM、Reduction、Transpose、Occupancy、Warp Stall、Coalescing、Roofline、Tiling、Fusion、Triton。</small></summary><div class="daylist">
+<a class="daylink active" href="day01.html"><b>Day 01 · 11/18 · 定位并优化一个慢 GEMM</b><span>naive/tiled 基线、Nsight Systems、Nsight Compute、Pinned Memory overlap。<strong>进入课程 →</strong></span></a>
+<div class="dayitem"><b>Day 02 · 11/19 · Warp 调度与 Stall 归因</b><span>对比不同指令依赖与访存模式，结合 NCU 指标解释 eligible/issued/stalled warps。</span></div>
+<div class="dayitem"><b>Day 03 · 11/20 · Register / Shared Memory / Spilling</b><span>改变寄存器压力和 tile 配置，分析寄存器、local memory 与 Occupancy。</span></div>
+<div class="dayitem"><b>Day 04 · 11/21 · Coalescing 与访存事务</b><span>运行连续、跨步和转置访问实验，比较 L1/L2/DRAM 流量。</span></div>
+<div class="dayitem"><b>Day 05 · 11/22 · Roofline 与带宽上界</b><span>估算 FLOP、Byte、Arithmetic Intensity，并用实测数据验证模型。</span></div>
+<div class="dayitem"><b>Day 06 · 11/23 · Vectorized Load / Store</b><span>实现向量化访存变体，比较对齐、尾部处理和吞吐。</span></div>
+<div class="dayitem"><b>Day 07 · 11/24 · Reduction 优化</b><span>比较 naive、shared-memory、warp-shuffle reduction 的正确性和性能。</span></div>
+<div class="dayitem"><b>Day 08 · 11/25 · GEMM Tiling</b><span>调整 tile 大小与数据复用，分析 Shared Memory、Register 和 Tensor Core 路径。</span></div>
+<div class="dayitem"><b>Day 09 · 11/26 · Kernel Fusion</b><span>融合 elementwise 算子，量化 launch 与 HBM 流量收益及寄存器代价。</span></div>
+<div class="dayitem"><b>Day 10 · 11/27 · Triton + 性能复盘</b><span>完成一个 Triton Kernel，对照 CUDA/参考实现并提交性能报告。</span></div>
+</div></details>
+<details class="phase"><summary><b>11.28—12.01 · RDMA</b><small>PCIe、NUMA、QP/CQ/WR、MR/lkey/rkey、GPUDirect RDMA、perftest。</small></summary><div class="daylist">
+<div class="dayitem"><b>Day 11 · 11/28 · PCIe / NUMA / NIC 拓扑</b><span>采集 nvidia-smi topo、lspci、numactl 信息，画 GPU-NIC 路径。</span></div>
+<div class="dayitem"><b>Day 12 · 11/29 · RDMA Verbs 实测</b><span>运行 ib_write_bw / ib_read_bw / ib_send_bw，改变消息大小和 QP 数量。</span></div>
+<div class="dayitem"><b>Day 13 · 11/30 · MR 注册与资源生命周期</b><span>追踪 MR、lkey、rkey、QP、CQ、WR，分析注册失败和资源耗尽场景。</span></div>
+<div class="dayitem"><b>Day 14 · 12/01 · GPUDirect RDMA</b><span>对比 Host staging 与 GPU memory RDMA 路径，检查 NUMA 与拓扑影响。</span></div>
+</div></details>
+<details class="phase"><summary><b>12.02—12.05 · NCCL</b><small>Collective、Ring/Tree、nccl-tests、busbw、慢 Rank 和拓扑。</small></summary><div class="daylist">
+<div class="dayitem"><b>Day 15 · 12/02 · AllReduce 实测</b><span>运行 nccl-tests，扫描消息尺寸，计算 algbw 与 busbw。</span></div>
+<div class="dayitem"><b>Day 16 · 12/03 · Collective 算法对照</b><span>对比 AllGather、ReduceScatter、AllReduce 的延迟和带宽曲线。</span></div>
+<div class="dayitem"><b>Day 17 · 12/04 · 拓扑与算法选择</b><span>对照 PCIe/NVLink/NIC 拓扑，解释多节点通信性能变化。</span></div>
+<div class="dayitem"><b>Day 18 · 12/05 · 慢 Rank 定位</b><span>用 NCCL 日志、NSYS 时间线和节点指标定位慢 Rank 与通信异常。</span></div>
+</div></details>
+<details class="phase"><summary><b>12.06—12.12 · SGLang / MoE</b><small>Scheduler/Worker、KV Cache、PD 分离、MTP、Dispatch/Combine、DeepEP/DeepGEMM。</small></summary><div class="daylist">
+<div class="dayitem"><b>Day 19 · 12/06 · 请求调度链路</b><span>从 Router 到 Scheduler/Worker 追踪真实请求，关联日志和源码入口。</span></div>
+<div class="dayitem"><b>Day 20 · 12/07 · Prefill / Decode Profiling</b><span>分离测量 Prefill、Decode、Chunked Prefill 的延迟和吞吐。</span></div>
+<div class="dayitem"><b>Day 21 · 12/08 · KV Cache 生命周期</b><span>测量 Cache 命中、分配、回收与显存压力，定位瓶颈。</span></div>
+<div class="dayitem"><b>Day 22 · 12/09 · PD 分离传输</b><span>追踪 KV 传输、同步、网络开销与 Decode 首 token 时延。</span></div>
+<div class="dayitem"><b>Day 23 · 12/10 · MoE Token Dispatch</b><span>统计 Router Top-K、Expert 热点、Token 分布和跨卡通信量。</span></div>
+<div class="dayitem"><b>Day 24 · 12/11 · DeepEP 通信分析</b><span>对比 Dispatch/Combine 通信路径、重叠效果和尾延迟。</span></div>
+<div class="dayitem"><b>Day 25 · 12/12 · DeepGEMM 与专家计算</b><span>分析 GEMM 形状、量化格式、Tensor Core 利用与 JIT 成本。</span></div>
+</div></details>
+<details class="phase"><summary><b>12.13—12.15 · GPU Scheduler</b><small>Kubernetes Device Plugin、Volcano、Gang、拓扑感知、资源碎片。</small></summary><div class="daylist">
+<div class="dayitem"><b>Day 26 · 12/13 · GPU 设备分配</b><span>追踪 Pod、Scheduler、Kubelet、Device Plugin 到容器设备注入。</span></div>
+<div class="dayitem"><b>Day 27 · 12/14 · Gang 与队列调度</b><span>构造资源不足和部分 Pod Pending 场景，分析准入与回滚。</span></div>
+<div class="dayitem"><b>Day 28 · 12/15 · 拓扑感知与碎片</b><span>模拟 TP/EP 拓扑需求，比较分配策略和有效 GPU 利用率。</span></div>
+</div></details>
+<details class="phase"><summary><b>12.16—12.19 · Agent Runtime</b><small>状态机、Durable Execution、Checkpoint、幂等、Sandbox、Tracing。</small></summary><div class="daylist">
+<div class="dayitem"><b>Day 29 · 12/16 · Agent 执行状态机</b><span>实现任务、步骤、Tool Call 状态和事件日志模型。</span></div>
+<div class="dayitem"><b>Day 30 · 12/17 · 崩溃恢复与幂等</b><span>注入执行中断和重复提交，验证恢复语义与外部副作用去重。</span></div>
+<div class="dayitem"><b>Day 31 · 12/18 · Sandbox 与租户隔离</b><span>设计并验证工具权限、文件系统、网络和资源限制。</span></div>
+<div class="dayitem"><b>Day 32 · 12/19 · Trace 与评估</b><span>贯通 Agent、Tool、模型请求的 Trace 和关键指标。</span></div>
+</div></details>
+<details class="phase"><summary><b>12.20—12.27 · Capstone</b><small>分布式 Agent Inference Platform 端到端设计与验证。</small></summary><div class="daylist">
+<div class="dayitem"><b>Day 33—40 · 12/20—12/27 · 端到端项目</b><span>需求与 SLO、架构、模型路由、GPU 调度、Tool Runtime、恢复、Observability、压力和故障测试。</span></div>
+</div></details>
+<details class="phase"><summary><b>12.28—12.30 · 最终验收</b><small>Kernel/RDMA/NCCL 实操、SGLang 性能归因、Agent 系统设计。</small></summary><div class="daylist">
+<div class="dayitem"><b>Day 41 · 12/28 · 底层专项实操</b><span>现场完成 Kernel Profiling、通信基准与根因分析。</span></div>
+<div class="dayitem"><b>Day 42 · 12/29 · 系统设计答辩</b><span>完成 SGLang 性能故障定位和 Agent Runtime 设计。</span></div>
+<div class="dayitem"><b>Day 43 · 12/30 · 综合验收</b><span>提交最终能力评估、项目成果与下一阶段成长计划。</span></div>
+</div></details></section>
 <section id="profiling" class="card"><h2>Profiling 工具链</h2>
 <div class="tool"><h3>Nsight Systems <span class="pill">系统时间线</span></h3><p>定位 CPU/GPU 空洞、Kernel Launch、Memcpy、同步、Streams 和 Copy/Compute overlap。</p><a href="https://docs.nvidia.com/nsight-systems/UserGuide/">官方文档</a></div>
 <div class="tool"><h3>Nsight Compute <span class="pill">Kernel 深挖</span></h3><p>分析 Occupancy、SM/Memory Throughput、Warp Stall、寄存器、Shared Memory 和访存行为。</p><a href="https://docs.nvidia.com/nsight-compute/ProfilingGuide/">官方文档</a></div>
